@@ -12,7 +12,9 @@
   "type": "commonjs",
   "devDependencies": {
     "@playwright/test": "^1.63.0",
-    "@types/node": "^26.4.0"
+    "@types/node": "^26.4.0",
+    "allure-commandline": "^2.46.1",
+    "allure-playwright": "^3.14.0"
   },
   "dependencies": {
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
