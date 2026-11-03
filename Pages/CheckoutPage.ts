@@ -18,7 +18,7 @@ export class CheckoutPage {
     this.postalCode = page.locator('[data-test="postalCode"]');
     this.continueButton = page.locator('[data-test="continue"]');
     this.errorMessage = page.locator('[data-test="error"]');
-    this.backpackName = page.locator('[data-test="inventory-item-name"]');
+    this.backpackName = page.getByText('Sauce Labs Backpack', { exact: true });
     this.finishButton = page.locator('[data-test="finish"]');
     this.confirmationHeading = page.getByRole('heading', { name: 'Thank you for your order!' });
   }
