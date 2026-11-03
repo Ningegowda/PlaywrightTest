@@ -7,7 +7,7 @@ export class CartPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.backpackName = page.locator('[data-test="inventory-item-name"]');
+    this.backpackName = page.getByText('Sauce Labs Backpack', { exact: true });
     this.checkoutButton = page.getByRole('button', { name: 'Checkout' });
   }
 
