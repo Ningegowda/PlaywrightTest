@@ -1,0 +1,109 @@
+name: Flaky Test Detection & Quarantine
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # Added permissions required to create GitHub Issues
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run stable tests
+        run: npx playwright test --grep-invert "@quarantine" --retries=2 --reporter=json,line
+        id: stable-tests
+        continue-on-error: true
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
+
+      - name: Check for flaky tests
+        if: always()
+        run: |
+          node -e "
+            const fs = require('fs');
+            if (!fs.existsSync('test-results/results.json')) {
+              console.log('No test results file found.');
+              process.exit(0);
+            }
+            
+            const results = JSON.parse(fs.readFileSync('test-results/results.json', 'utf8'));
+            const allSpecs = [];
+            
+            function findSpecs(suite) {
+              if (suite.specs) allSpecs.push(...suite.specs);
+              if (suite.suites) suite.suites.forEach(findSpecs);
+            }
+            if (results.suites) results.suites.forEach(findSpecs);
+            
+            const flaky = allSpecs.filter(spec => 
+              spec.tests.some(t => t.results.length > 1 && t.results.some(r => r.status === 'passed'))
+            );
+            
+            if (flaky.length > 0) {
+              console.log('::warning::Flaky tests detected:');
+              flaky.forEach(f => console.log(' - ' + f.title));
+              fs.writeFileSync('flaky-tests.txt', flaky.map(f => f.title).join('\n'));
+            } else {
+              console.log('No flaky tests detected in this run.');
+            }
+          "
+
+      # New Step: Create an issue if flaky tests are found on the main branch
+      - name: Create Flaky Test GitHub Issue
+        if: always() && github.ref == 'refs/heads/main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'flaky-tests.txt';
+            
+            if (!fs.existsSync(path)) {
+              console.log('No flaky tests file found. Skipping issue creation.');
+              return;
+            }
+            
+            const flakyTests = fs.readFileSync(path, 'utf8').trim();
+            if (!flakyTests) return;
+            
+            const issueTitle = `🚨 Flaky Tests Detected in Main Pipeline`;
+            const issueBody = `The following tests passed only after retries in a recent run on \`main\`:\n\n\`\`\`\n${flakyTests}\n\`\`\`\n\n*Please investigate and add the \`@quarantine\` tag if necessary to prevent pipeline noise.*`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['flaky-test', 'bug']
+            });
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            test-results/
+            playwright-report/
+            flaky-tests.txt
+
+      - name: Fail if stable tests failed
+        if: always() && steps.stable-tests.outcome == 'failure'
+        run: exit 1
