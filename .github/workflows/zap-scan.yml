@@ -1,0 +1,24 @@
+name: OWASP ZAP Baseline Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+    name: Scan the web application
+    permissions:
+      issues: write # Required if you want ZAP to auto-create GitHub issues
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'https://www.commbank.com.au/retail/netbank/personal-lending/compareandselect/'
+          rules_file_name: '.zap/rules.tsv' # Optional: customize alert thresholds
+          cmd_options: '-a'
