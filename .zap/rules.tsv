@@ -1,0 +1,35 @@
+# ZAP Baseline Rules Configuration
+# Format: <Rule_ID>	<Action>	<Optional_Description>
+# IMPORTANT: Columns MUST be separated by a single TAB character, not spaces.
+# Actions: IGNORE, WARN, FAIL
+
+# --- Informational & Low-Risk Noise ---
+10109	IGNORE	Modern Web Application
+10112	IGNORE	Session Management Response Identified
+10049	IGNORE	Non-Storable Content
+10050	IGNORE	Retrieved from Cache
+10096	IGNORE	Timestamp Disclosure - Unix
+10094	IGNORE	Base64 Disclosure
+
+# --- Third-Party & External Resources ---
+10017	IGNORE	Cross-Domain JavaScript Source File Inclusion
+90003	IGNORE	Sub Resource Integrity Attribute Missing
+10098	IGNORE	Cross-Domain Misconfiguration
+
+# --- Missing Security Headers (Change to WARN or FAIL when ready to enforce) ---
+10038	WARN	Content Security Policy (CSP) Header Not Set
+10020	WARN	Missing Anti-clickjacking Header
+10021	WARN	X-Content-Type-Options Header Missing
+10063	IGNORE	Permissions Policy Header Not Set
+90004	IGNORE	Cross-Origin-Embedder-Policy Header Missing or Invalid
+90005	IGNORE	Sec-Fetch-Dest Header is Missing
+
+# --- Cookies & Forms (Examples from your scan) ---
+10054	WARN	Cookie with SameSite Attribute None
+90033	WARN	Loosely Scoped Cookie
+10202	WARN	Absence of Anti-CSRF Tokens
+
+# --- High-Priority Checks (Set to FAIL to block PRs if detected) ---
+10003	FAIL	Vulnerable JS Library
+10011	FAIL	Cookie Without Secure Flag
+10040	FAIL	Secure Pages Include Mixed Content
