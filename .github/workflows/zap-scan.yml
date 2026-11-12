@@ -11,14 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     name: Scan the web application
     permissions:
+      contents: read
       issues: write # Required if you want ZAP to auto-create GitHub issues
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set workspace permissions for ZAP
+        run: chmod a+w ${{ github.workspace }}
+
       - name: ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: 'https://www.commbank.com.au/retail/netbank/personal-lending/compareandselect/'
-          rules_file_name: '.zap/rules.tsv' # Optional: customize alert thresholds
+          # Remove or comment out rules_file_name unless '.zap/rules.tsv' exists in your repo
+          # rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
