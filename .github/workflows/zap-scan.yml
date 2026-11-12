@@ -25,5 +25,5 @@ jobs:
         with:
           target: 'https://www.commbank.com.au/retail/netbank/personal-lending/compareandselect/'
           # Remove or comment out rules_file_name unless '.zap/rules.tsv' exists in your repo
-          # rules_file_name: '.zap/rules.tsv'
+            rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
